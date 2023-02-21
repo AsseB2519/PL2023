@@ -125,15 +125,21 @@ def main():
     while True:
         print(
             "Which distribution do you want to visualize?\n1 - Disease by sex\n2 - Disease by age\n3 - Disease by cholesterol\n")
-        o = int(input("-> "))
+        try:
+            o = int(input("-> "))
+        except ValueError:
+            print("Invalid option.\n")
+            continue
 
         if o in [1, 2, 3]:
             if o == 1:
+                print("Sex:")
                 r = dist_sex(d)
                 print(
                     "M with disease: " + str(r["M"][0]) + "\nM without disease: " + str(r["M"][1]) + "\nF with disease: " + str(
                         r["F"][0]) + "\nF without disease: " + str(r["F"][1]) + "\n")
             elif o == 2:
+                print("Age:")
                 r = dist_age(d)
                 for ran in r:
                     print(ran + ": " + str(r[ran]))
@@ -141,6 +147,7 @@ def main():
                 print("\n")
             elif o == 3:
                 r = dist_col(d)
+                print("Cholesterol:")
                 for ran in r:
                     print(ran + ": " + str(r[ran]))
 
