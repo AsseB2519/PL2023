@@ -52,13 +52,9 @@ def main():
                 result += partial_result
                 text = text[i+1:]
                 i = 0
+                print(f"Resultado: {result}")
             else:
                 i += 1
-        partial_result = calculate_sum(text)
-        if text != '':
-            print(f"{text} -> {partial_result}")
-        result += partial_result
-        print(f"Resultado: {result}\n")
 
 
 if __name__ == "__main__":
