@@ -75,7 +75,7 @@ def converter_para_json(arquivo):
             campos = linha.strip().split('::')
             if len(campos) >= 7:
                 registro = {
-                    'ID': campos[0],
+                    'Pasta': campos[0],
                     'Data': campos[1],
                     'Nome': campos[2],
                     'Pai': campos[3],
