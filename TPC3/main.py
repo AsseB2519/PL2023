@@ -1,36 +1,32 @@
 import re
-from collections import Counter
 import json
 
+import re
+
+
 def frequencia_por_ano(arquivo):
-    # inicializa o dicionário de frequência
-    freq_anos = {}
-
-    # abre o arquivo de processos para leitura
     with open(arquivo, 'r') as f:
-        # lê cada linha do arquivo
-        for linha in f:
-            # extrai o ano da data usando expressão regular
+        linhas = f.readlines()
 
-            # ^ -> indica que a busca deve começar no início da string
-            # \d+ -> busca um ou mais dígitos no início da string. Isso serve para ignorar o primeiro elemento da linha, que é o número do processo.
-            # :: -> procura por dois pontos consecutivos, que separam o primeiro elemento da data do segundo.
-            # (\d{4}) -> é um grupo de captura que busca exatamente 4 dígitos. Esses 4 dígitos correspondem ao ano.
-            # - -> procura pelo caractere hífen que segue o ano. Isso serve para ignorar o restante da data, já que estamos interessados apenas no ano.
-            match = re.search(r'^\d+::(\d{4})-', linha)
-            if match:
-                ano = match.group(1)
+        freq_ano = {}
 
-                # atualiza a frequência de processos para o ano correspondente
-                if ano in freq_anos:
-                    freq_anos[ano] += 1
+        for linha in linhas:
+            ano = re.findall(r'^\d+::(\d{4})-', linha)
+            if ano:
+                ano = ano[0]
+                if ano in freq_ano:
+                    freq_ano[ano] += 1
                 else:
-                    freq_anos[ano] = 1
+                    freq_ano[ano] = 1
 
-    # retorna a frequência de processos por ano
-    return freq_anos
+        freq_ano_s = list(freq_ano.items())
+        freq_ano_s.sort(key=lambda x: x[1], reverse=True)
 
-# def frequencia_nomes_por_seculo(arquivo):2
+        for key, value in freq_ano_s:
+            print(f"{key}: {value}")
+
+
+# def frequencia_nomes_por_seculo(arquivo):
 #     # Inicializa o dicionário de frequência por século
 #     freq_por_seculo = {}
 #
@@ -80,41 +76,31 @@ def frequencia_relacoes(arquivo):
                     relacoes[r] += 1
                 else:
                     relacoes[r] = 1
-    return relacoes
+    sorted_relacoes = sorted(relacoes.items(), key=lambda item: (-item[1], item[0] != 'Avo'))
+    return dict(sorted_relacoes)
 
-# def ler_registros(arquivo):
-#     """
-#     Lê os registros do arquivo e retorna uma lista de strings, uma para cada registro.
-#     """
-#     with open(arquivo, 'r', encoding='utf8') as f:
-#         registros = f.read().split('\n\n')
-#     return registros
-#
-# def registro_para_dict(registro):
-#     """
-#     Converte um registro (string) em um dicionário com as informações do registro.
-#     """
-#     campos = registro.split('::')
-#     return {
-#         'num_processo': int(campos[0]),
-#         'data_nascimento': campos[1],
-#         'nome': campos[2],
-#         'nome_pai': campos[3],
-#         'nome_mae': campos[4],
-#         'nome_avo1': campos[5] if len(campos) >= 6 else '',
-#         'nome_avo2': campos[6] if len(campos) >= 7 else '',
-#         'relacao_avo1': campos[7] if len(campos) >= 8 else '',
-#         'relacao_avo2': campos[8] if len(campos) >= 9 else ''
-#     }
-#
-# def converter_para_json(arquivo, num_registros=20, nome_arquivo_saida='output.json'):
-#     registros = ler_registros(arquivo)[:num_registros]
-#     json_registros = [registro_para_dict(registro) for registro in registros]
-#
-#     with open(nome_arquivo_saida, 'w') as f:
-#         json.dump(json_registros, f, indent=4)
-#
-#     print(f'Os primeiros {num_registros} registros foram convertidos para JSON e salvos em {nome_arquivo_saida}.')
+
+def converter_para_json(arquivo):
+    with open(arquivo, 'r', encoding='utf-8') as f:
+        dados = []
+        for linha in f:
+            campos = linha.strip().split('::')
+            if len(campos) >= 7:
+                registro = {
+                    'ID': campos[0],
+                    'Data': campos[1],
+                    'Nome': campos[2],
+                    'Pai': campos[3],
+                    'Mae': campos[4],
+                    'Obs': campos[5],
+                    'Obs2': campos[6]
+                }
+                dados.append(registro)
+                if len(dados) == 20:
+                    break
+
+    with open('processos.json', 'w', encoding='utf-8') as f:
+        json.dump(dados, f, ensure_ascii=False, indent=4)
 
 
 def main():
@@ -130,17 +116,16 @@ def main():
         opcao = input("Opção: ")
 
         if opcao == '1':
-            freq_anos = frequencia_por_ano(arquivo)
-            for ano, freq in freq_anos.items():
-                print(f'{ano}: {freq}')
+            frequencia_por_ano(arquivo)
         #elif opcao == '2':
             #frequencia_nomes_por_seculo(arquivo)
         elif opcao == '3':
             freq_relacoes = frequencia_relacoes(arquivo)
             for relacao, freq in freq_relacoes.items():
                 print(f'{relacao}: {freq}')
-        #elif opcao == '4':
-            #converter_para_json(arquivo)
+        elif opcao == '4':
+            converter_para_json(arquivo)
+            print("Feito!")
         elif opcao == '5':
             break
         else:
@@ -149,3 +134,6 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
+
