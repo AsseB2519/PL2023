@@ -1,6 +1,8 @@
 import json
+import csv
+import os
 
-def read_file_and_convert_to_json(filename):
+def ex1(filename):
     with open(filename, 'r') as f:
         linhas = f.readlines()
 
@@ -11,57 +13,61 @@ def read_file_and_convert_to_json(filename):
         colunas[-1] = colunas[-1].rstrip("\n")
 
         final = []
-        tmp = {}
 
         for linha in linhas:
             cols = linha.split(",")
             cols[-1] = cols[-1].rstrip("\n")
+            tmp = {} # create a new dictionary in every iteration
             ii = 0
             for i in colunas:
                 tmp[i] = cols[ii]
                 ii += 1
             final.append(tmp)
 
-        y = json.dumps(final, indent=4)
+        y = json.dumps(final, indent=4, ensure_ascii=False) # ensure_ascii=False to correctly handle non-ascii characters
 
-        with open('output.json', 'w') as j:
+        output_filename = filename.split(".")[0] + ".json"
+        with open(output_filename, 'w', encoding='utf-8') as j: # specify encoding to correctly handle non-ascii characters
             j.write(y)
 
-    print("Conversion completed. Check output.json for the result.")
+    print(f"Conversion completed. Check {output_filename} for the result.")
 
-def convert_csv_to_json(filename):
+def ex2(filename):
     with open(filename, 'r') as f:
-        lines = f.readlines()
+        reader = csv.reader(f, delimiter=',')
 
-    header = lines[0].split(',')
-    for i in range(len(header)):
-        if '{' in header[i]:
-            n_cols = int(header[i].split('{')[1].split('}')[0])
-            header[i] = header[i].split('{')[0]
-            for j in range(n_cols - 1):
-                header.insert(i+1, '')
+        # Extract header
+        header = next(reader)
 
-    header = [h.strip() for h in header]
-    lines = [l.strip().split(',') for l in lines[1:]]
+        # Initialize empty list to store records
+        records = []
 
-    data = []
-    for line in lines:
-        item = {}
-        start = 0
-        for i in range(len(header)):
-            if i < len(header)-1 and not header[i+1]:
-                end = start + n_cols
-                item[header[i]] = line[start:end]
-                start = end
-            else:
-                item[header[i]] = line[start] if start < len(line) else ''
-                start += 1
-        data.append(item)
+        # Loop through remaining rows
+        for row in reader:
+            record = {}
+            for i, value in enumerate(row):
+                # Check if current column corresponds to "Notas" field
+                if header[i] == "Notas{5}":
+                    notas = []
+                    for j in range(i, i + 5):
+                        notas.append(int(row[j]))
+                    record["Notas"] = notas
+                # Skip empty columns
+                elif value:
+                    record[header[i]] = value
+            records.append(record)
 
-    with open('output.json', 'w') as outfile:
-        json.dump(data, outfile, indent=4)
+    # Rename "Numero" to "Número"
+    for record in records:
+        if "Numero" in record:
+            record["Número"] = record.pop("Numero")
 
-    print(f"Conversion completed. Check output.json for the result.")
+    # Write records to output file
+    output_filename = os.path.splitext(filename)[0] + ".json"
+    with open(output_filename, 'w', encoding='utf-8') as j:
+        json.dump(records, j, ensure_ascii=False, indent=4)
+
+    print("Conversion completed. Check " + output_filename + " for the result.")
 
 def main():
     while True:
@@ -75,9 +81,9 @@ def main():
             header = f.readline()
 
         if "{" in header:
-            convert_csv_to_json(filename)
+            ex2(filename)
         else:
-            read_file_and_convert_to_json(filename)
+            ex1(filename)
 
 if __name__ == "__main__":
     main()
